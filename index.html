@@ -7,8 +7,9 @@
     <style>
         :root {
             --term-green: #00ff41;
-            --term-bg: #0c0c0c;
-            --win-header: #333;
+            --term-bg: #050505;
+            --win-border: #444;
+            --win-header: #1a1a1a;
         }
 
         body, html {
@@ -19,14 +20,16 @@
             padding: 0;
             height: 100vh;
             overflow: hidden;
+            cursor: text;
         }
 
-        /* Initial Boot Screen */
+        /* Terminal Styling */
         #boot-screen {
             padding: 20px;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            height: 100%;
+            overflow-y: auto;
         }
 
         #history { white-space: pre-wrap; margin-bottom: 5px; }
@@ -43,58 +46,49 @@
             flex-grow: 1;
         }
 
-        /* Portfolio Window System */
+        /* The "Portal.exe" Window Styling */
         #portfolio-window {
             position: absolute;
-            top: 10%;
-            left: 10%;
-            width: 80%;
-            height: 70%;
+            top: 15%;
+            left: 15%;
+            width: 70%;
+            height: 60%;
             background: var(--term-bg);
-            border: 1px solid #555;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid var(--win-border);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
             display: none;
             flex-direction: column;
-            z-index: 100;
+            z-index: 1000;
+            min-width: 300px;
+            min-height: 200px;
         }
 
         .window-header {
             background: var(--win-header);
-            padding: 5px 10px;
+            padding: 8px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: move;
-            user-select: none;
+            border-bottom: 1px solid var(--win-border);
         }
 
-        .window-controls span {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            margin-left: 8px;
-            cursor: pointer;
-            border-radius: 2px;
-            text-align: center;
-            line-height: 10px;
-            font-size: 10px;
-            font-weight: bold;
-            color: #000;
-        }
-
+        .window-controls { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
         .close { background: #ff5f56; }
         .min { background: #ffbd2e; }
         .max { background: #27c93f; }
 
         .window-content {
-            padding: 20px;
+            padding: 30px;
             overflow-y: auto;
             flex-grow: 1;
-            color: #fff;
+            color: #eee;
+            line-height: 1.6;
         }
 
         .hidden { display: none !important; }
-        .fullscreen { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; }
+        .full-window { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; }
     </style>
 </head>
 <body>
@@ -102,26 +96,29 @@
     <div id="boot-screen">
         <div id="history"></div>
         <div class="input-area" id="input-line">
-            <span>C:\USERS\MCKEOWN&gt;&nbsp;</span>
-            <input type="text" id="cmd-input" autofocus autocomplete="off">
+            <span>MCKEOWN_SYS:\&gt;&nbsp;</span>
+            <input type="text" id="cmd-input" autofocus autocomplete="off" spellcheck="false">
         </div>
     </div>
 
     <div id="portfolio-window">
         <div class="window-header" id="win-drag">
-            <span style="font-size: 0.8rem;">McKeown_Innovation_Portal.exe</span>
             <div class="window-controls">
-                <span class="min" onclick="toggleMin()">_</span>
-                <span class="max" onclick="toggleMax()">□</span>
-                <span class="close" onclick="location.reload()">×</span>
+                <span class="dot close" title="Exit" onclick="closeWindow()"></span>
+                <span class="dot min" title="Minimize" onclick="toggleMin()"></span>
+                <span class="dot max" title="Maximize" onclick="toggleMax()"></span>
             </div>
+            <div style="font-size: 12px; color: #888;">McKeown_Innovation_Portal.exe</div>
         </div>
         <div class="window-content">
-            <h1 style="color: var(--term-green);">Welcome to the McKeown Innovation Portal</h1>
-            <hr border="1" color="#333">
-            <p>> System Status: Online</p>
-            <p>> Portfolio Data: [Empty Archive]</p>
-            <p>Your projects and experience will appear here.</p>
+            <h2 style="color: var(--term-green); margin-top: 0;">Welcome to the McKeown Innovation Portal</h2>
+            <hr style="border: 0; border-top: 1px solid #333; margin-bottom: 20px;">
+            <p style="color: #00ff41;">[ PORTFOLIO STATUS: ARCHIVE READY ]</p>
+            <p>Your content is ready to be populated here. You can add images, project links, or a resume.</p>
+            <ul style="list-style: square; padding-left: 20px;">
+                <li><b style="color: var(--term-green);">Project Alpha:</b> System Integration Phase.</li>
+                <li><b style="color: var(--term-green);">System Status:</b> Optimal.</li>
+            </ul>
         </div>
     </div>
 
@@ -131,45 +128,56 @@
         const win = document.getElementById('portfolio-window');
         const welcomeMsg = "Welcome to the McKeown Innovation System portfolio and portal.\nPlease fire a command to proceed:\n\n";
         
-        // Typewriter Effect
-        let i = 0;
+        // Typewriter Effect for Boot
+        let charIndex = 0;
         function typeWriter() {
-            if (i < welcomeMsg.length) {
-                history.textContent += welcomeMsg.charAt(i);
-                i++;
-                setTimeout(typeWriter, 20);
+            if (charIndex < welcomeMsg.length) {
+                history.textContent += welcomeMsg.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeWriter, 15);
             }
         }
-        typeWriter();
+        window.onload = typeWriter;
 
-        // Command Logic
+        // Command Processor
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
                 const val = input.value;
                 const cmd = val.toLowerCase().trim();
                 
-                history.textContent += `C:\\USERS\\MCKEOWN> ${val}\n`;
+                history.textContent += `MCKEOWN_SYS:\\> ${val}\n`;
 
                 if (cmd === 'mckeown fire login') {
-                    history.textContent += "Authenticating... Access Granted.\nLaunching Portal UI...";
+                    history.textContent += "Authenticating... Access Granted.\nOpening GUI Interface...\n";
                     setTimeout(() => {
                         win.style.display = 'flex';
-                        document.getElementById('input-line').classList.add('hidden');
-                    }, 800);
+                        document.getElementById('input-line').style.opacity = '0.3'; // Dim terminal
+                    }, 600);
+                } else if (cmd === 'help') {
+                    history.textContent += "Available commands: 'mckeown fire login', 'clear', 'help'\n\n";
+                } else if (cmd === 'clear') {
+                    history.textContent = '';
                 } else {
-                    history.textContent += `'${cmd}' is not recognized as an internal or external command.\n\n`;
+                    history.textContent += `'${cmd}' is not a valid innovation command.\n\n`;
                 }
 
                 input.value = '';
-                window.scrollTo(0, document.body.scrollHeight);
+                document.getElementById('boot-screen').scrollTop = document.getElementById('boot-screen').scrollHeight;
             }
         });
 
-        // Window Controls
-        function toggleMax() { win.classList.toggle('fullscreen'); }
-        function toggleMin() { win.classList.toggle('hidden'); setTimeout(() => win.classList.remove('hidden'), 2000); } // Reappears after 2s for demo
+        // Window Controls Logic
+        function toggleMax() { win.classList.toggle('full-window'); }
+        function closeWindow() { 
+            win.style.display = 'none'; 
+            document.getElementById('input-line').style.opacity = '1';
+        }
+        function toggleMin() { 
+            win.style.opacity = '0'; 
+            setTimeout(() => { win.style.opacity = '1'; }, 2000); 
+        }
 
-        // Basic Dragging Logic
+        // Window Dragging Logic
         const dragArea = document.getElementById('win-drag');
         let isDragging = false;
         let offset = [0,0];
@@ -188,8 +196,10 @@
 
         document.addEventListener('mouseup', () => { isDragging = false; });
         
-        // Keep focus
-        document.addEventListener('click', () => input.focus());
+        // Refocus input if user clicks background
+        document.addEventListener('click', (e) => {
+            if(e.target.tagName !== 'INPUT') input.focus();
+        });
     </script>
 </body>
 </html>
