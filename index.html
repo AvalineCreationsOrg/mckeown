@@ -8,22 +8,23 @@
         :root { --green: #00ff41; --bg: #000; --win-bg: #0a0a0a; --border: #333; }
         body, html { background: var(--bg); color: var(--green); font-family: 'Courier New', monospace; margin: 0; height: 100vh; overflow: hidden; }
         
-        /* Terminal UI */
+        /* Terminal Layout */
         #terminal { padding: 20px; height: 100%; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; }
+        #history { white-space: pre-wrap; line-height: 1.4; }
         .input-line { display: flex; align-items: center; margin-top: 10px; }
         input { background: transparent; border: none; color: var(--green); font-family: inherit; font-size: 1rem; outline: none; flex: 1; }
 
-        /* Floating Portal Window */
+        /* Pop-out Portal Window */
         #portal-window {
             position: absolute; top: 15%; left: 15%; width: 70%; height: 60%;
             background: var(--win-bg); border: 1px solid var(--border);
             display: none; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1000;
         }
         .win-header { background: #1a1a1a; padding: 10px; display: flex; justify-content: space-between; cursor: move; border-bottom: 1px solid var(--border); user-select: none; }
-        .win-controls { display: flex; gap: 8px; }
+        .win-controls { display: flex; gap: 10px; }
         .win-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
         .close { background: #ff5f56; } .max { background: #27c93f; }
-        .win-content { padding: 25px; overflow-y: auto; color: #fff; line-height: 1.6; }
+        .win-content { padding: 25px; overflow-y: auto; color: #fff; }
         .full-screen { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
     </style>
 </head>
@@ -32,7 +33,7 @@
 <div id="terminal">
     <div id="history">Welcome to the mckeown innovation system portfolio and portal.<br>Please fire a command to proceed (Syntax: mckeown fire [command]):</div>
     <div class="input-line">
-        <span>&gt;&nbsp;</span>
+        <span id="prompt-label">&gt;&nbsp;</span>
         <input type="text" id="cmd-input" autofocus spellcheck="false" autocomplete="off">
     </div>
 </div>
@@ -43,18 +44,15 @@
             <div class="win-dot close" onclick="closePortal()"></div>
             <div class="win-dot max" onclick="maxPortal()"></div>
         </div>
-        <div style="font-size: 12px; color: #666; font-weight: bold;">McKeown_Innovation_Portal.exe</div>
+        <div style="font-size: 12px; color: #666;">McKeown_Innovation_Portal.exe</div>
     </div>
     <div class="win-content">
-        <h2 style="color: var(--green); margin-top: 0;">Welcome to the McKeown Innovation Portal</h2>
-        <p style="color: var(--green); opacity: 0.8;">&gt; Access Level: Administrator</p>
-        <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-        
-        <div id="portfolio-body">
-            <p>[ Portfolio Content Pending... ]</p>
-            <ul style="color: var(--green); list-style: square;">
-                <li><b>Project Alpha:</b> Next-gen system architecture.</li>
-                <li><b>System Status:</b> All modules nominal.</li>
+        <h2 style="color: var(--green);">Welcome to the McKeown Innovation Portal</h2>
+        <p style="color: var(--green); opacity: 0.7;">[ Portfolio Content Active ]</p>
+        <div id="portal-data-display">
+            <ul style="color: var(--green); list-style: none; padding-left: 0;">
+                <li><b>• Project Alpha:</b> System integration complete.</li>
+                <li><b>• System Status:</b> Optimal.</li>
             </ul>
         </div>
     </div>
@@ -64,40 +62,74 @@
     const input = document.getElementById('cmd-input');
     const history = document.getElementById('history');
     const win = document.getElementById('portal-window');
+    const promptLabel = document.getElementById('prompt-label');
+    
+    let isWaitingForPassword = false;
+
+    const myInfo = {
+        contacts: "Email: tylerdavidmckeown@icloud.com\nPhone: 07533312418",
+        projects: "1. Terminal Portfolio UI\n2. Innovation System v1.0",
+        bio: "Age: 15\nStatus: Lead Developer"
+    };
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const rawVal = input.value.trim();
             const val = rawVal.toLowerCase();
-            history.innerHTML += `<br><span style="color: #888;">&gt; ${rawVal}</span>`;
 
-            // Core Logic: Must start with "mckeown fire"
+            // Handle Password Input
+            if (isWaitingForPassword) {
+                if (rawVal === "#Mckeown97214") {
+                    history.innerHTML += `<br>Password Accepted. Initializing GUI...`;
+                    setTimeout(() => { win.style.display = 'flex'; }, 400);
+                    isWaitingForPassword = false;
+                    promptLabel.innerHTML = "&gt;&nbsp;";
+                    input.type = "text";
+                } else {
+                    history.innerHTML += `<br><span style="color: #ff5f56;">Incorrect Password. Login Terminated.</span>`;
+                    isWaitingForPassword = false;
+                    promptLabel.innerHTML = "&gt;&nbsp;";
+                    input.type = "text";
+                }
+                input.value = '';
+                return;
+            }
+
+            history.innerHTML += `<br><span style="color: #666;">&gt; ${rawVal}</span>`;
+
             if (val.startsWith('mckeown fire ')) {
                 const subCmd = val.replace('mckeown fire ', '');
 
                 if (subCmd === 'login') {
-                    history.innerHTML += `<br>Authenticating...<br>Welcome to the mckeown innovation portal. Initializing GUI...`;
-                    setTimeout(() => { win.style.display = 'flex'; }, 400);
+                    history.innerHTML += `<br>System Request: Enter Password for Administrator Access.`;
+                    isWaitingForPassword = true;
+                    promptLabel.innerHTML = "Password:&nbsp;";
+                    input.type = "password"; // Hide password dots while typing
                 } 
-                else if (subCmd === 'dir' || subCmd === 'ls') {
-                    history.innerHTML += `<br><br>Directory of C:\\MCKEOWN_INNOVATION_SYSTEM\\<br><br>` +
-                                         `02/01/2026  09:00PM  &lt;EXE&gt;  McKeown_Innovation_Portal.exe<br>` +
-                                         `02/01/2026  09:00PM  &lt;TXT&gt;  bio.txt<br>` +
-                                         `02/01/2026  09:15PM  &lt;SYS&gt;  config.sys<br><br>` +
-                                         `3 File(s) detected.<br>`;
-                } 
-                else if (subCmd === 'clear') {
-                    history.innerHTML = "System buffer cleared. Ready for input.";
+                else if (subCmd === 'attach') {
+                    history.innerHTML += `<br>Binding console to popup... Control established.`;
+                    win.style.display = 'flex';
+                    win.classList.add('full-screen');
                 }
-                else if (subCmd === 'help') {
-                    history.innerHTML += `<br>Available Commands:<br>- login : Launches Portal<br>- dir : Lists system files<br>- clear : Resets terminal`;
+                else if (subCmd.startsWith('pullinfo ')) {
+                    const infoType = subCmd.replace('pullinfo ', '');
+                    if (myInfo[infoType]) {
+                        history.innerHTML += `<br>Retrieving [${infoType}]...<br>${myInfo[infoType]}`;
+                    } else {
+                        history.innerHTML += `<br>Error: Data stream '${infoType}' not found.`;
+                    }
+                }
+                else if (subCmd === 'dir' || subCmd === 'ls') {
+                    history.innerHTML += `<br>Directory: McKeown_Innovation_Portal.exe, bio.txt, config.sys`;
+                }
+                else if (subCmd === 'clear') {
+                    history.innerHTML = "System buffer cleared.";
                 }
                 else {
-                    history.innerHTML += `<br>Error: '${subCmd}' is not a recognized innovation parameter.`;
+                    history.innerHTML += `<br>Error: Command '${subCmd}' unknown.`;
                 }
             } else {
-                // If they forget the prefix
-                history.innerHTML += `<br><span style="color: #ff5f56;">Access Denied. Commands must be fired using 'mckeown fire [cmd]'.</span>`;
+                history.innerHTML += `<br><span style="color: #ff5f56;">Access Denied. Command must start with 'mckeown fire'.</span>`;
             }
 
             input.value = '';
@@ -105,8 +137,7 @@
         }
     });
 
-    // Window Functions
-    function closePortal() { win.style.display = 'none'; }
+    function closePortal() { win.style.display = 'none'; win.classList.remove('full-screen'); }
     function maxPortal() { win.classList.toggle('full-screen'); }
 
     // Drag Logic
