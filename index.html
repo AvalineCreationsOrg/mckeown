@@ -5,104 +5,190 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>McKeown Innovation System</title>
     <style>
-        body {
-            background-color: #0d0d0d;
-            color: #00ff41; /* Classic Matrix/Terminal Green */
-            font-family: 'Courier New', Courier, monospace;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            height: 90vh;
+        :root {
+            --term-green: #00ff41;
+            --term-bg: #0c0c0c;
+            --win-header: #333;
+        }
+
+        body, html {
+            background-color: #000;
+            color: var(--term-green);
+            font-family: 'Consolas', 'Courier New', monospace;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
             overflow: hidden;
         }
 
-        #terminal {
-            white-space: pre-wrap;
-            line-height: 1.5;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .input-line {
+        /* Initial Boot Screen */
+        #boot-screen {
+            padding: 20px;
             display: flex;
-            align-items: center;
-            margin-top: 10px;
+            flex-direction: column;
+            height: 100%;
         }
 
-        #command-input {
+        #history { white-space: pre-wrap; margin-bottom: 5px; }
+
+        .input-area { display: flex; align-items: center; }
+        
+        #cmd-input {
             background: transparent;
             border: none;
-            color: #00ff41;
+            color: var(--term-green);
             font-family: inherit;
             font-size: 1rem;
             outline: none;
             flex-grow: 1;
-            margin-left: 10px;
         }
 
-        .hidden { display: none; }
-        
-        /* Portfolio Styling */
-        #portfolio {
-            border-top: 2px solid #00ff41;
-            margin-top: 20px;
-            padding-top: 20px;
+        /* Portfolio Window System */
+        #portfolio-window {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            width: 80%;
+            height: 70%;
+            background: var(--term-bg);
+            border: 1px solid #555;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            z-index: 100;
         }
+
+        .window-header {
+            background: var(--win-header);
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-controls span {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-left: 8px;
+            cursor: pointer;
+            border-radius: 2px;
+            text-align: center;
+            line-height: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .close { background: #ff5f56; }
+        .min { background: #ffbd2e; }
+        .max { background: #27c93f; }
+
+        .window-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            color: #fff;
+        }
+
+        .hidden { display: none !important; }
+        .fullscreen { top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; }
     </style>
 </head>
 <body>
 
-    <div id="terminal">
-        <div>Welcome to the McKeown Innovation System portfolio and portal.</div>
-        <div>Please fire a command to proceed:</div>
+    <div id="boot-screen">
+        <div id="history"></div>
+        <div class="input-area" id="input-line">
+            <span>C:\USERS\MCKEOWN&gt;&nbsp;</span>
+            <input type="text" id="cmd-input" autofocus autocomplete="off">
+        </div>
     </div>
 
-    <div class="input-line" id="input-container">
-        <span>&gt;</span>
-        <input type="text" id="command-input" autofocus autocomplete="off" spellcheck="false">
-    </div>
-
-    <div id="portfolio" class="hidden">
-        <h2>Welcome to the McKeown Innovation Portal</h2>
-        <p>[ Portfolio Content Pending... ]</p>
-        <ul>
-            <li><strong>Project Alpha:</strong> Description here.</li>
-            <li><strong>System Status:</strong> Optimal.</li>
-        </ul>
+    <div id="portfolio-window">
+        <div class="window-header" id="win-drag">
+            <span style="font-size: 0.8rem;">McKeown_Innovation_Portal.exe</span>
+            <div class="window-controls">
+                <span class="min" onclick="toggleMin()">_</span>
+                <span class="max" onclick="toggleMax()">□</span>
+                <span class="close" onclick="location.reload()">×</span>
+            </div>
+        </div>
+        <div class="window-content">
+            <h1 style="color: var(--term-green);">Welcome to the McKeown Innovation Portal</h1>
+            <hr border="1" color="#333">
+            <p>> System Status: Online</p>
+            <p>> Portfolio Data: [Empty Archive]</p>
+            <p>Your projects and experience will appear here.</p>
+        </div>
     </div>
 
     <script>
-        const input = document.getElementById('command-input');
-        const terminal = document.getElementById('terminal');
-        const portfolio = document.getElementById('portfolio');
-        const inputContainer = document.getElementById('input-container');
+        const history = document.getElementById('history');
+        const input = document.getElementById('cmd-input');
+        const win = document.getElementById('portfolio-window');
+        const welcomeMsg = "Welcome to the McKeown Innovation System portfolio and portal.\nPlease fire a command to proceed:\n\n";
+        
+        // Typewriter Effect
+        let i = 0;
+        function typeWriter() {
+            if (i < welcomeMsg.length) {
+                history.textContent += welcomeMsg.charAt(i);
+                i++;
+                setTimeout(typeWriter, 20);
+            }
+        }
+        typeWriter();
 
+        // Command Logic
         input.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') {
-                const command = input.value.trim().toLowerCase();
+                const val = input.value;
+                const cmd = val.toLowerCase().trim();
                 
-                // Add the typed command to the terminal history
-                const history = document.createElement('div');
-                history.textContent = `> ${input.value}`;
-                terminal.appendChild(history);
+                history.textContent += `C:\\USERS\\MCKEOWN> ${val}\n`;
 
-                // Logic check
-                if (command === 'mckeown fire login') {
-                    inputContainer.classList.add('hidden');
-                    portfolio.classList.remove('hidden');
-                    window.scrollTo(0, document.body.scrollHeight);
+                if (cmd === 'mckeown fire login') {
+                    history.textContent += "Authenticating... Access Granted.\nLaunching Portal UI...";
+                    setTimeout(() => {
+                        win.style.display = 'flex';
+                        document.getElementById('input-line').classList.add('hidden');
+                    }, 800);
                 } else {
-                    const error = document.createElement('div');
-                    error.textContent = `Command '${command}' not recognized. Access denied.`;
-                    terminal.appendChild(error);
+                    history.textContent += `'${cmd}' is not recognized as an internal or external command.\n\n`;
                 }
 
-                input.value = ''; // Clear input
-                terminal.scrollTop = terminal.scrollHeight; // Auto-scroll
+                input.value = '';
+                window.scrollTo(0, document.body.scrollHeight);
             }
         });
 
-        // Keep focus on input even if user clicks elsewhere
+        // Window Controls
+        function toggleMax() { win.classList.toggle('fullscreen'); }
+        function toggleMin() { win.classList.toggle('hidden'); setTimeout(() => win.classList.remove('hidden'), 2000); } // Reappears after 2s for demo
+
+        // Basic Dragging Logic
+        const dragArea = document.getElementById('win-drag');
+        let isDragging = false;
+        let offset = [0,0];
+
+        dragArea.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offset = [win.offsetLeft - e.clientX, win.offsetTop - e.clientY];
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                win.style.left = (e.clientX + offset[0]) + 'px';
+                win.style.top = (e.clientY + offset[1]) + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => { isDragging = false; });
+        
+        // Keep focus
         document.addEventListener('click', () => input.focus());
     </script>
 </body>
