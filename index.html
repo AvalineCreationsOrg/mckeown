@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>McKeown Innovation System</title>
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #00ff41; /* Classic Matrix/Terminal Green */
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            height: 90vh;
+            overflow: hidden;
+        }
+
+        #terminal {
+            white-space: pre-wrap;
+            line-height: 1.5;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        #command-input {
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            flex-grow: 1;
+            margin-left: 10px;
+        }
+
+        .hidden { display: none; }
+        
+        /* Portfolio Styling */
+        #portfolio {
+            border-top: 2px solid #00ff41;
+            margin-top: 20px;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="terminal">
+        <div>Welcome to the McKeown Innovation System portfolio and portal.</div>
+        <div>Please fire a command to proceed:</div>
+    </div>
+
+    <div class="input-line" id="input-container">
+        <span>&gt;</span>
+        <input type="text" id="command-input" autofocus autocomplete="off" spellcheck="false">
+    </div>
+
+    <div id="portfolio" class="hidden">
+        <h2>Welcome to the McKeown Innovation Portal</h2>
+        <p>[ Portfolio Content Pending... ]</p>
+        <ul>
+            <li><strong>Project Alpha:</strong> Description here.</li>
+            <li><strong>System Status:</strong> Optimal.</li>
+        </ul>
+    </div>
+
+    <script>
+        const input = document.getElementById('command-input');
+        const terminal = document.getElementById('terminal');
+        const portfolio = document.getElementById('portfolio');
+        const inputContainer = document.getElementById('input-container');
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const command = input.value.trim().toLowerCase();
+                
+                // Add the typed command to the terminal history
+                const history = document.createElement('div');
+                history.textContent = `> ${input.value}`;
+                terminal.appendChild(history);
+
+                // Logic check
+                if (command === 'mckeown fire login') {
+                    inputContainer.classList.add('hidden');
+                    portfolio.classList.remove('hidden');
+                    window.scrollTo(0, document.body.scrollHeight);
+                } else {
+                    const error = document.createElement('div');
+                    error.textContent = `Command '${command}' not recognized. Access denied.`;
+                    terminal.appendChild(error);
+                }
+
+                input.value = ''; // Clear input
+                terminal.scrollTop = terminal.scrollHeight; // Auto-scroll
+            }
+        });
+
+        // Keep focus on input even if user clicks elsewhere
+        document.addEventListener('click', () => input.focus());
+    </script>
+</body>
+</html>
