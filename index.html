@@ -5,92 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>McKeown Innovation System</title>
     <style>
-        :root { --green: #00ff41; --bg: #050505; --win: #1a1a1a; }
-        body, html { background: #000; color: var(--green); font-family: 'Consolas', monospace; margin: 0; height: 100vh; overflow: hidden; }
-        #boot { padding: 20px; height: 100%; overflow-y: auto; box-sizing: border-box; }
-        #history { white-space: pre-wrap; }
-        .input-line { display: flex; align-items: center; }
-        input { background: transparent; border: none; color: var(--green); font-family: inherit; font-size: 1rem; outline: none; flex: 1; }
+        :root { --green: #00ff41; --bg: #000; --win-bg: #0a0a0a; --border: #333; }
+        body, html { background: var(--bg); color: var(--green); font-family: 'Courier New', monospace; margin: 0; height: 100vh; overflow: hidden; }
         
-        /* Pop-out Window */
-        #portal-win { 
-            position: absolute; top: 15%; left: 15%; width: 70%; height: 60%; 
-            background: var(--bg); border: 1px solid #444; display: none; 
-            flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.9); z-index: 100;
+        /* Terminal UI */
+        #terminal { padding: 20px; height: 100%; overflow-y: auto; box-sizing: border-box; scroll-behavior: smooth; }
+        .input-line { display: flex; align-items: center; margin-top: 10px; }
+        input { background: transparent; border: none; color: var(--green); font-family: inherit; font-size: 1rem; outline: none; flex: 1; }
+
+        /* Floating Portal Window */
+        #portal-window {
+            position: absolute; top: 15%; left: 15%; width: 70%; height: 60%;
+            background: var(--win-bg); border: 1px solid var(--border);
+            display: none; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.8); z-index: 1000;
         }
-        .header { background: var(--win); padding: 8px; display: flex; justify-content: space-between; cursor: move; border-bottom: 1px solid #444; }
-        .controls { display: flex; gap: 8px; }
-        .dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+        .win-header { background: #1a1a1a; padding: 10px; display: flex; justify-content: space-between; cursor: move; border-bottom: 1px solid var(--border); user-select: none; }
+        .win-controls { display: flex; gap: 8px; }
+        .win-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
         .close { background: #ff5f56; } .max { background: #27c93f; }
-        .content { padding: 25px; overflow-y: auto; color: #fff; }
-        .hidden { display: none !important; }
+        .win-content { padding: 25px; overflow-y: auto; color: #fff; line-height: 1.6; }
+        .full-screen { width: 100% !important; height: 100% !important; top: 0 !important; left: 0 !important; }
     </style>
 </head>
 <body>
 
-<div id="boot">
-    <div id="history"></div>
-    <div class="input-line" id="input-container">
-        <span>MCKEOWN_SYS:\&gt;&nbsp;</span>
-        <input type="text" id="cmd" autofocus spellcheck="false" autocomplete="off">
+<div id="terminal">
+    <div id="history">Welcome to the mckeown innovation system portfolio and portal.<br>Please fire a command to proceed (Syntax: mckeown fire [command]):</div>
+    <div class="input-line">
+        <span>&gt;&nbsp;</span>
+        <input type="text" id="cmd-input" autofocus spellcheck="false" autocomplete="off">
     </div>
 </div>
 
-<div id="portal-win">
-    <div class="header" id="drag">
-        <div class="controls"><span class="dot close" onclick="closeWin()"></span><span class="dot max" onclick="toggleMax()"></span></div>
-        <div style="font-size: 12px; color: #888;">McKeown_Innovation_Portal.exe</div>
+<div id="portal-window">
+    <div class="win-header" id="drag-handle">
+        <div class="win-controls">
+            <div class="win-dot close" onclick="closePortal()"></div>
+            <div class="win-dot max" onclick="maxPortal()"></div>
+        </div>
+        <div style="font-size: 12px; color: #666; font-weight: bold;">McKeown_Innovation_Portal.exe</div>
     </div>
-    <div class="content">
-        <h2 style="color: var(--green);">McKeown Innovation Portal</h2>
-        <hr border="1" color="#333">
-        <p>Welcome, Authorized User.</p>
-        <ul>
-            <li><b>Project Alpha:</b> In Progress</li>
-            <li><b>System Status:</b> Online</li>
-        </ul>
+    <div class="win-content">
+        <h2 style="color: var(--green); margin-top: 0;">Welcome to the McKeown Innovation Portal</h2>
+        <p style="color: var(--green); opacity: 0.8;">&gt; Access Level: Administrator</p>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+        
+        <div id="portfolio-body">
+            <p>[ Portfolio Content Pending... ]</p>
+            <ul style="color: var(--green); list-style: square;">
+                <li><b>Project Alpha:</b> Next-gen system architecture.</li>
+                <li><b>System Status:</b> All modules nominal.</li>
+            </ul>
+        </div>
     </div>
 </div>
 
 <script>
-    const hist = document.getElementById('history');
-    const input = document.getElementById('cmd');
-    const win = document.getElementById('portal-win');
-    const welcome = "Welcome to the McKeown Innovation System portfolio and portal.\nPlease fire a command to proceed (type 'help' for info):\n\n";
-
-    let i = 0;
-    function type() { if(i < welcome.length) { hist.textContent += welcome[i++]; setTimeout(type, 15); } }
-    window.onload = type;
+    const input = document.getElementById('cmd-input');
+    const history = document.getElementById('history');
+    const win = document.getElementById('portal-window');
 
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            const val = input.value.trim();
-            const cmd = val.toLowerCase();
-            hist.textContent += `MCKEOWN_SYS:\\> ${val}\n`;
+            const rawVal = input.value.trim();
+            const val = rawVal.toLowerCase();
+            history.innerHTML += `<br><span style="color: #888;">&gt; ${rawVal}</span>`;
 
-            if (cmd === 'mckeown fire login') {
-                hist.textContent += "Authenticating... Access Granted.\nLaunching GUI...\n";
-                setTimeout(() => { win.style.display = 'flex'; }, 500);
-            } else if (cmd === 'dir' || cmd === 'ls') {
-                hist.textContent += "02/01/2026  09:00 PM    1,024 bio.txt\n02/01/2026  09:15 PM    5,280 McKeown_Innovation_Portal.exe\n\n";
-            } else if (cmd === 'help') {
-                hist.textContent += "Commands: 'dir', 'mckeown fire login', 'clear'\n\n";
-            } else if (cmd === 'clear') { hist.textContent = ''; }
-            
+            // Core Logic: Must start with "mckeown fire"
+            if (val.startsWith('mckeown fire ')) {
+                const subCmd = val.replace('mckeown fire ', '');
+
+                if (subCmd === 'login') {
+                    history.innerHTML += `<br>Authenticating...<br>Welcome to the mckeown innovation portal. Initializing GUI...`;
+                    setTimeout(() => { win.style.display = 'flex'; }, 400);
+                } 
+                else if (subCmd === 'dir' || subCmd === 'ls') {
+                    history.innerHTML += `<br><br>Directory of C:\\MCKEOWN_INNOVATION_SYSTEM\\<br><br>` +
+                                         `02/01/2026  09:00PM  &lt;EXE&gt;  McKeown_Innovation_Portal.exe<br>` +
+                                         `02/01/2026  09:00PM  &lt;TXT&gt;  bio.txt<br>` +
+                                         `02/01/2026  09:15PM  &lt;SYS&gt;  config.sys<br><br>` +
+                                         `3 File(s) detected.<br>`;
+                } 
+                else if (subCmd === 'clear') {
+                    history.innerHTML = "System buffer cleared. Ready for input.";
+                }
+                else if (subCmd === 'help') {
+                    history.innerHTML += `<br>Available Commands:<br>- login : Launches Portal<br>- dir : Lists system files<br>- clear : Resets terminal`;
+                }
+                else {
+                    history.innerHTML += `<br>Error: '${subCmd}' is not a recognized innovation parameter.`;
+                }
+            } else {
+                // If they forget the prefix
+                history.innerHTML += `<br><span style="color: #ff5f56;">Access Denied. Commands must be fired using 'mckeown fire [cmd]'.</span>`;
+            }
+
             input.value = '';
-            document.getElementById('boot').scrollTop = document.getElementById('boot').scrollHeight;
+            document.getElementById('terminal').scrollTop = document.getElementById('terminal').scrollHeight;
         }
     });
 
-    function closeWin() { win.style.display = 'none'; }
-    function toggleMax() { win.style.width = "100%"; win.style.height = "100%"; win.style.top = "0"; win.style.left = "0"; }
+    // Window Functions
+    function closePortal() { win.style.display = 'none'; }
+    function maxPortal() { win.classList.toggle('full-screen'); }
 
-    // Basic Drag
+    // Drag Logic
     let isDragging = false; let offset = [0,0];
-    document.getElementById('drag').onmousedown = (e) => { isDragging = true; offset = [win.offsetLeft - e.clientX, win.offsetTop - e.clientY]; };
-    document.onmousemove = (e) => { if(isDragging) { win.style.left = (e.clientX + offset[0])+'px'; win.style.top = (e.clientY + offset[1])+'px'; } };
-    document.onmouseup = () => isDragging = false;
-    document.onclick = () => input.focus();
+    const handle = document.getElementById('drag-handle');
+    handle.onmousedown = (e) => { isDragging = true; offset = [win.offsetLeft - e.clientX, win.offsetTop - e.clientY]; };
+    document.onmousemove = (e) => { if (isDragging) { win.style.left = (e.clientX + offset[0]) + 'px'; win.style.top = (e.clientY + offset[1]) + 'px'; } };
+    document.onmouseup = () => { isDragging = false; };
+    document.onclick = (e) => { if(e.target.tagName !== 'INPUT') input.focus(); };
 </script>
 </body>
 </html>
